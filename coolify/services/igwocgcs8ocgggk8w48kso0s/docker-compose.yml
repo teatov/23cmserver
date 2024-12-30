@@ -1,0 +1,157 @@
+services:
+  gitea:
+    image: 'gitea/gitea:latest'
+    container_name: gitea-igwocgcs8ocgggk8w48kso0s
+    environment:
+      USER_UID: '1000'
+      USER_GID: '1000'
+      GITEA__database__DB_TYPE: mysql
+      GITEA__database__HOST: mariadb
+      GITEA__database__NAME: '${MYSQL_DATABASE-gitea}'
+      GITEA__database__USER: $SERVICE_USER_MYSQL
+      GITEA__database__PASSWD: $SERVICE_PASSWORD_MYSQL
+      COOLIFY_CONTAINER_NAME: '"gitea-igwocgcs8ocgggk8w48kso0s"'
+      COOLIFY_URL: 'https://git.23cmline.com:3000'
+      COOLIFY_FQDN: 'git.23cmline.com:3000'
+    volumes:
+      - 'igwocgcs8ocgggk8w48kso0s_gitea-data:/data'
+      - 'igwocgcs8ocgggk8w48kso0s_gitea-timezone:/etc/timezone'
+      - 'igwocgcs8ocgggk8w48kso0s_gitea-localtime:/etc/localtime'
+    ports:
+      - '22222:22'
+    networks:
+      gitea: null
+      igwocgcs8ocgggk8w48kso0s: null
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - '-f'
+        - 'http://127.0.0.1:3000'
+      interval: 2s
+      timeout: 10s
+      retries: 15
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.version=4.0.0-beta.380
+      - coolify.serviceId=1
+      - coolify.type=service
+      - coolify.name=gitea-igwocgcs8ocgggk8w48kso0s
+      - coolify.pullRequestId=0
+      - coolify.service.subId=1
+      - coolify.service.subType=application
+      - traefik.enable=true
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.http-0-igwocgcs8ocgggk8w48kso0s-gitea.entryPoints=http
+      - traefik.http.routers.http-0-igwocgcs8ocgggk8w48kso0s-gitea.middlewares=redirect-to-https
+      - 'traefik.http.routers.http-0-igwocgcs8ocgggk8w48kso0s-gitea.rule=Host(`git.23cmline.com`) && PathPrefix(`/`)'
+      - traefik.http.routers.http-0-igwocgcs8ocgggk8w48kso0s-gitea.service=http-0-igwocgcs8ocgggk8w48kso0s-gitea
+      - traefik.http.routers.https-0-igwocgcs8ocgggk8w48kso0s-gitea.entryPoints=https
+      - traefik.http.routers.https-0-igwocgcs8ocgggk8w48kso0s-gitea.middlewares=gzip
+      - 'traefik.http.routers.https-0-igwocgcs8ocgggk8w48kso0s-gitea.rule=Host(`git.23cmline.com`) && PathPrefix(`/`)'
+      - traefik.http.routers.https-0-igwocgcs8ocgggk8w48kso0s-gitea.service=https-0-igwocgcs8ocgggk8w48kso0s-gitea
+      - traefik.http.routers.https-0-igwocgcs8ocgggk8w48kso0s-gitea.tls.certresolver=letsencrypt
+      - traefik.http.routers.https-0-igwocgcs8ocgggk8w48kso0s-gitea.tls=true
+      - traefik.http.services.http-0-igwocgcs8ocgggk8w48kso0s-gitea.loadbalancer.server.port=3000
+      - traefik.http.services.https-0-igwocgcs8ocgggk8w48kso0s-gitea.loadbalancer.server.port=3000
+      - 'caddy_0.encode=zstd gzip'
+      - 'caddy_0.handle_path.0_reverse_proxy={{upstreams 3000}}'
+      - 'caddy_0.handle_path=/*'
+      - caddy_0.header=-Server
+      - 'caddy_0.try_files={path} /index.html /index.php'
+      - 'caddy_0=https://git.23cmline.com'
+      - caddy_ingress_network=igwocgcs8ocgggk8w48kso0s
+  mariadb:
+    image: 'mariadb:11'
+    volumes:
+      - 'igwocgcs8ocgggk8w48kso0s_gitea-mariadb-data:/var/lib/mysql'
+    environment:
+      MYSQL_USER: '${SERVICE_USER_MYSQL}'
+      MYSQL_PASSWORD: '${SERVICE_PASSWORD_MYSQL}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_ROOT_PASSWORD: '${SERVICE_PASSWORD_MYSQLROOT}'
+      SERVICE_USER_MYSQL: :)
+      SERVICE_PASSWORD_MYSQL: :)
+      SERVICE_PASSWORD_MYSQLROOT: :)
+      COOLIFY_CONTAINER_NAME: '"mariadb-igwocgcs8ocgggk8w48kso0s"'
+    networks:
+      gitea: null
+      igwocgcs8ocgggk8w48kso0s: null
+    healthcheck:
+      test:
+        - CMD
+        - healthcheck.sh
+        - '--connect'
+        - '--innodb_initialized'
+      interval: 5s
+      timeout: 20s
+      retries: 10
+    container_name: mariadb-igwocgcs8ocgggk8w48kso0s
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.version=4.0.0-beta.380
+      - coolify.serviceId=1
+      - coolify.type=service
+      - coolify.name=mariadb-igwocgcs8ocgggk8w48kso0s
+      - coolify.pullRequestId=0
+      - coolify.service.subId=1
+      - coolify.service.subType=database
+  runner:
+    image: 'gitea/act_runner:nightly'
+    environment:
+      CONFIG_FILE: /config.yaml
+      GITEA_INSTANCE_URL: '${INSTANCE_URL}'
+      GITEA_RUNNER_REGISTRATION_TOKEN: '${REGISTRATION_TOKEN}'
+      GITEA_RUNNER_NAME: '${RUNNER_NAME}'
+      INSTANCE_URL: 'https://git.23cmline.com:3000'
+      REGISTRATION_TOKEN: :)
+      RUNNER_NAME: null
+      COOLIFY_CONTAINER_NAME: '"runner-igwocgcs8ocgggk8w48kso0s"'
+    networks:
+      gitea: null
+      igwocgcs8ocgggk8w48kso0s: null
+    volumes:
+      - '/runner-config.yaml:/config.yaml'
+      - 'igwocgcs8ocgggk8w48kso0s_runner:/data'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      gitea:
+        condition: service_healthy
+    container_name: runner-igwocgcs8ocgggk8w48kso0s
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.version=4.0.0-beta.380
+      - coolify.serviceId=1
+      - coolify.type=service
+      - coolify.name=runner-igwocgcs8ocgggk8w48kso0s
+      - coolify.pullRequestId=0
+      - coolify.service.subId=3
+      - coolify.service.subType=application
+volumes:
+  igwocgcs8ocgggk8w48kso0s_gitea-data:
+    name: igwocgcs8ocgggk8w48kso0s_gitea-data
+  igwocgcs8ocgggk8w48kso0s_gitea-timezone:
+    name: igwocgcs8ocgggk8w48kso0s_gitea-timezone
+  igwocgcs8ocgggk8w48kso0s_gitea-localtime:
+    name: igwocgcs8ocgggk8w48kso0s_gitea-localtime
+  igwocgcs8ocgggk8w48kso0s_gitea-mariadb-data:
+    name: igwocgcs8ocgggk8w48kso0s_gitea-mariadb-data
+  igwocgcs8ocgggk8w48kso0s_runner:
+    name: igwocgcs8ocgggk8w48kso0s_runner
+networks:
+  gitea:
+    external: true
+  igwocgcs8ocgggk8w48kso0s:
+    name: igwocgcs8ocgggk8w48kso0s
+    external: true
+configs: {  }
+secrets: {  }
