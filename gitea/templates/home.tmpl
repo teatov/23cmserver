@@ -1,0 +1,21 @@
+{{template "base/head" .}}
+<div role="main" aria-label="{{if .IsSigned}}{{ctx.Locale.Tr "dashboard"}}{{else}}{{ctx.Locale.Tr "home"}}{{end}}" class="page-content home">
+        <div class="tw-mb-8 tw-px-8">
+                <div class="center">
+                        <img class="logo" width="220" height="220" src="{{AssetUrlPrefix}}/img/logo.svg" alt="{{ctx.Locale.Tr "logo"}}">
+                        <div class="hero">
+                                <h1 class="ui icon header title">
+                                        {{AppName}}
+                                </h1>
+                                <h2>Here we store the source code of our games.</h2>
+                        </div>
+                        <p>
+                                I got so frustrated with GitHub's petty size limits on LFS and action artifact storage so I decided to self-host my own git thingy.
+                        </p>
+                        <p>
+                                You can create an account via GitHub or Google. With it you can post issues and make pull requests, if you wish.
+                        </p>
+                </div>
+        </div>
+</div>
+{{template "base/footer" .}}
