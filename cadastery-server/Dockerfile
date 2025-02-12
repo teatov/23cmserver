@@ -1,4 +1,4 @@
-FROM alpine:3.21
+FROM alpine:latest
 
 ENV GAME_VERSION "0.0.1"
 
