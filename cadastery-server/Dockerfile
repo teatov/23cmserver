@@ -1,13 +1,11 @@
-FROM alpine:latest
+FROM debian:stable-slim
 
 ENV GAME_VERSION "0.0.1"
 
-RUN apk update
-RUN apk add --no-cache bash
-RUN apk add --no-cache wget
-
-RUN wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.31-r0/glibc-2.31-r0.apk
-RUN apk add --allow-untrusted glibc-2.31-r0.apk
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    wget \
+    unzip
 
 WORKDIR /server
 
